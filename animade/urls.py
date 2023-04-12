@@ -20,7 +20,7 @@ from django.contrib.auth.models import User
 from rest_framework import routers, serializers, viewsets
 from .views import RegisterAPI, ChangePasswordView
 from knox import views as knox_views
-from .views import LoginAPI ,MainUser,ProfileAPI
+from .views import LoginAPI ,MainUser,ProfileAPIView, CreateProfileAPIView
 from django.urls import path , re_path
 from django.views.generic.base import TemplateView
 # Serializers define the API representation.
@@ -31,13 +31,12 @@ from django.views.generic.base import TemplateView
 urlpatterns = [
     path('api/register/', RegisterAPI.as_view(), name='register'),
     path('api/login/', LoginAPI.as_view(), name='login'),
-
     path('api/logout/', knox_views.LogoutView.as_view(), name='logout'),
     path('api/logoutall/', knox_views.LogoutAllView.as_view(), name='logoutall'),
     path('api/auth/user/', MainUser.as_view()),
     path('api/password_reset/', include('django_rest_passwordreset.urls', namespace='password_reset')),
     path('api/change-password/', ChangePasswordView.as_view(), name='change-password'),
-    # path('api/auth/userdetail/', getprofiledata()),
-    path('api/users/<user_id>/profile/', ProfileAPI.as_view())
+    path('api/profile/create/', CreateProfileAPIView.as_view()),
+    path('api/users/<user_id>/profile/', ProfileAPIView.as_view())
 
 ]

@@ -1,30 +1,27 @@
-from django.shortcuts import render
+import math, random
 
-# Create your views here.
-from rest_framework import generics, permissions
-from rest_framework.response import Response
-from knox.models import AuthToken
-from .serializers import UserSerializer, RegisterSerializer
-from django.contrib.auth import login
+from django.shortcuts import render
 from django.shortcuts import get_object_or_404
-from rest_framework import permissions
-from rest_framework.authtoken.serializers import AuthTokenSerializer
-from knox.views import LoginView as KnoxLoginView
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.core.mail import send_mail
-import math, random
-# Register API
-from rest_framework.views import APIView
 
-from rest_framework import status
-from rest_framework import generics
+from rest_framework import generics, permissions, status
 from rest_framework.response import Response
-from django.contrib.auth.models import User
-from .serializers import ChangePasswordSerializer ,UserSerializer,profileserializer
+from rest_framework.authtoken.serializers import AuthTokenSerializer
+from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, throttle_classes,permission_classes
+
+from knox.models import AuthToken
+from knox.views import LoginView as KnoxLoginView
+
+from django.contrib.auth import login
+from django.contrib.auth.models import User
+
 from .models import Profile
+from .serializers import UserSerializer, RegisterSerializer, ChangePasswordSerializer,ProfileSerializer
+from .permissions import ProfileOwnerPermission
 
 class ChangePasswordView(generics.UpdateAPIView):
     """
@@ -59,6 +56,7 @@ class ChangePasswordView(generics.UpdateAPIView):
             return Response(response)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 class RegisterAPI(generics.GenericAPIView):
     serializer_class = RegisterSerializer
 
@@ -71,6 +69,7 @@ class RegisterAPI(generics.GenericAPIView):
         "token": AuthToken.objects.create(user)[1]
         })
 
+
 class LoginAPI(KnoxLoginView):
         permission_classes = (permissions.AllowAny,)
 
@@ -80,6 +79,7 @@ class LoginAPI(KnoxLoginView):
             user = serializer.validated_data['user']
             login(request, user)
             return super(LoginAPI, self).post(request, format=None)
+
 
 class MainUser(generics.RetrieveAPIView):
   permission_classes = [
@@ -91,13 +91,40 @@ class MainUser(generics.RetrieveAPIView):
 
     return self.request.user
 
-
-
-class ProfileAPI(APIView):
+class CreateProfileAPIView(APIView):
     permission_classes = [
         permissions.IsAuthenticated
     ]
+
+    def post(self, request, *args, **kwargs):
+        user = self.request.user
+        if not user.profile:
+            Profile.objects.create(user = user)
+            return Response(status=status.HTTP_201_CREATED)
+
+        return Response(status=status.HTTP_304_NOT_MODIFIED)
+
+class ProfileAPIView(APIView):
+    permission_classes = [
+        permissions.IsAuthenticated, ProfileOwnerPermission
+    ]
+
     def get(self, request, *args, **kwargs):
-        user = get_object_or_404(User, pk=kwargs['user_id'])
-        profile_serializer = profileserializer(user.username)
+        profile = Profile.objects.get(user__id=kwargs['user_id'])
+        profile_serializer = ProfileSerializer(profile)
         return Response(profile_serializer.data)
+
+    def put(self, request, *args, **kwargs):
+        profile = Profile.objects.get(user__id=kwargs['user_id'])
+        self.check_object_permissions(self.request, profile)
+        serializer = ProfileSerializer(profile, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, *args, **kwargs):
+        profile = Profile.objects.get(user__id=kwargs['user_id'])
+        self.check_object_permissions(self.request, profile)
+        profile.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
