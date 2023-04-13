@@ -21,7 +21,7 @@ from django.contrib.auth.models import User
 
 from .models import Profile, CreatedDesign, SavedDesign
 from .serializers import UserSerializer, RegisterSerializer, ChangePasswordSerializer,ProfileSerializer, CreatedDesignSerializer, SavedDesignSerializer
-from .permissions import ProfileOwnerPermission
+from .permissions import OwnerPermission
 
 class ChangePasswordView(generics.UpdateAPIView):
     """
@@ -92,6 +92,9 @@ class MainUser(generics.RetrieveAPIView):
     return self.request.user
 
 class CreateProfileAPIView(APIView):
+    """
+        View to Create User profile if it doesn't already exists
+    """
     permission_classes = [
         permissions.IsAuthenticated
     ]
@@ -105,8 +108,13 @@ class CreateProfileAPIView(APIView):
         return Response(status=status.HTTP_304_NOT_MODIFIED)
 
 class ProfileAPIView(APIView):
+    """
+        View for read, update and delete specific profile
+        get: for anyone
+        put, delete : for profile owners
+    """
     permission_classes = [
-        permissions.IsAuthenticated, ProfileOwnerPermission
+        permissions.IsAuthenticated, OwnerPermission
     ]
 
     def get(self, request, *args, **kwargs):
@@ -130,21 +138,84 @@ class ProfileAPIView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
     
 class CreatedDesignAPIView(APIView):
+    """
+        View to create and list CreatedDesign
+    """
     permission_classes = [
-        permissions.IsAuthenticated, ProfileOwnerPermission
+        permissions.IsAuthenticated, OwnerPermission
     ]
 
     def get(self, request, *args, **kwargs):
-        profile = CreatedDesign.objects.get(user__id=kwargs['user_id'])
+        profile = CreatedDesign.objects.all()
         design_serializer = CreatedDesignSerializer(profile)
         return Response(design_serializer.data)
+    
+    def post(self, request, *args, **kwargs):
+        design_data = request.POST
+        serializer = CreatedDesignSerializer(data = design_data)
+        # return Response(status=status.HTTP_201_CREATED)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_304_NOT_MODIFIED)
 
-class SavedDesignAPIView(APIView):
+class CreatedDesignRUDView(generics.RetrieveUpdateDestroyAPIView):
+    """
+        Created Design Detail, Update and Delete View
+    """
     permission_classes = [
-        permissions.IsAuthenticated, ProfileOwnerPermission
+        permissions.IsAuthenticated, permissions.IsAdminUser
+    ]
+    queryset = CreatedDesign.objects.all()
+    serializer_class = CreatedDesignSerializer
+
+class SaveDesignAPIView(APIView):
+    """
+        View to save design
+    """
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        design = CreatedDesign.objects.get(id = kwargs['pk'])
+        try:
+            saveddesign = get_object_or_404(SavedDesign, design = design)
+            saveddesign.status = True
+            saveddesign.save()
+            return Response({"message" :"Design saved successfully!"},status=status.HTTP_201_CREATED)
+        
+        except:
+            User.objects.create(user = user, design = design, status = True)
+            return Response({"message" :"Design saved successfully!"},status=status.HTTP_201_CREATED)
+
+class UnsaveDesignAPIView(APIView):
+    """
+        View to save design
+    """
+    def get(self, request, *args, **kwargs):
+        design = SavedDesign.objects.get(id = kwargs['pk'])
+        design.status = False
+        design.save()
+        # User.objects.create(user = user, design = design, status = True)
+        return Response({"message" :"Design Unsaved successfully!"},status=status.HTTP_201_CREATED)
+
+class UserSavedDesignAPIView(APIView):
+    """
+        View to list saved designs of requesting user
+    """
+    permission_classes = [  
+        permissions.IsAuthenticated, OwnerPermission
     ]
 
     def get(self, request, *args, **kwargs):
-        profile = SavedDesign.objects.get(user__id=kwargs['user_id'])
-        design_serializer = SavedDesignSerializer(profile)
+        design = SavedDesign.objects.filter(user = request.user)
+        design_serializer = SavedDesignSerializer(design)
         return Response(design_serializer.data)
+
+# class SavedDesignRUDView(generics.RetrieveUpdateDestroyAPIView):
+#     """
+#         Saved Design Detail, Update and Delete View
+#     """
+#     permission_classes = [
+#         permissions.IsAuthenticated, OwnerPermission
+#     ]
+#     queryset = SavedDesign.objects.all()
+#     serializer_class = SavedDesignSerializer

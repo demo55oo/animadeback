@@ -18,9 +18,8 @@ from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth.models import User
 from rest_framework import routers, serializers, viewsets
-from .views import RegisterAPI, ChangePasswordView
 from knox import views as knox_views
-from .views import LoginAPI ,MainUser,ProfileAPIView, CreateProfileAPIView
+from .views import *
 from django.urls import path , re_path
 from django.views.generic.base import TemplateView
 # Serializers define the API representation.
@@ -37,6 +36,11 @@ urlpatterns = [
     path('api/password_reset/', include('django_rest_passwordreset.urls', namespace='password_reset')),
     path('api/change-password/', ChangePasswordView.as_view(), name='change-password'),
     path('api/profile/create/', CreateProfileAPIView.as_view()),
-    path('api/users/<user_id>/profile/', ProfileAPIView.as_view())
+    path('api/users/<user_id>/profile/', ProfileAPIView.as_view()),
+    path('api/createddesign/', CreatedDesignAPIView.as_view()),
+    path('api/createddesign/<int:pk>/', CreatedDesignRUDView.as_view()),
+    path('api/createddesign/<int:pk>/save/', SaveDesignAPIView.as_view()),
+    path('api/users/<user_id>/saveddesign/', UserSavedDesignAPIView.as_view()),
+    # path('api/saveddesign/<int:pk>/', SavedDesignRUDView.as_view()),
 
 ]
