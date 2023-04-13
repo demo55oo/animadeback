@@ -19,8 +19,8 @@ from knox.views import LoginView as KnoxLoginView
 from django.contrib.auth import login
 from django.contrib.auth.models import User
 
-from .models import Profile
-from .serializers import UserSerializer, RegisterSerializer, ChangePasswordSerializer,ProfileSerializer
+from .models import Profile, CreatedDesign, SavedDesign
+from .serializers import UserSerializer, RegisterSerializer, ChangePasswordSerializer,ProfileSerializer, CreatedDesignSerializer, SavedDesignSerializer
 from .permissions import ProfileOwnerPermission
 
 class ChangePasswordView(generics.UpdateAPIView):
@@ -128,3 +128,23 @@ class ProfileAPIView(APIView):
         self.check_object_permissions(self.request, profile)
         profile.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+class CreatedDesignAPIView(APIView):
+    permission_classes = [
+        permissions.IsAuthenticated, ProfileOwnerPermission
+    ]
+
+    def get(self, request, *args, **kwargs):
+        profile = CreatedDesign.objects.get(user__id=kwargs['user_id'])
+        design_serializer = CreatedDesignSerializer(profile)
+        return Response(design_serializer.data)
+
+class SavedDesignAPIView(APIView):
+    permission_classes = [
+        permissions.IsAuthenticated, ProfileOwnerPermission
+    ]
+
+    def get(self, request, *args, **kwargs):
+        profile = SavedDesign.objects.get(user__id=kwargs['user_id'])
+        design_serializer = SavedDesignSerializer(profile)
+        return Response(design_serializer.data)

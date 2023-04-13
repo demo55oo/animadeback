@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework import status
 from django.contrib.auth.models import User
 from django import forms
-from .models import Profile
+from .models import Profile, CreatedDesign, SavedDesign
 
 class ChangePasswordSerializer(serializers.Serializer):
     """
@@ -22,6 +22,16 @@ class UserSerializer(serializers.ModelSerializer):
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
+        fields = "__all__"
+
+class CreatedDesignSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CreatedDesign
+        fields = "__all__"
+
+class SavedDesignSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SavedDesign
         fields = "__all__"
 
 class RegisterSerializer(serializers.ModelSerializer):

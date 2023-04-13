@@ -35,10 +35,10 @@ class Profile(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return {self.user.username}
+        return self.user.username
 
 # show how we want it to be displayed
-class createddesigns(models.Model):
+class CreatedDesign(models.Model):
     desc = models.TextField()
     number = models.IntegerField()
     image = models.ImageField(default=None, blank=True, null=True, upload_to="images/", max_length=1000)
@@ -46,9 +46,9 @@ class createddesigns(models.Model):
     def __str__(self):
       return str(self.id)
 
-class saveddesigns(models.Model):
+class SavedDesign(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    design = models.ForeignKey(createddesigns, on_delete=models.CASCADE)
+    design = models.ForeignKey(CreatedDesign, on_delete=models.CASCADE)
     status = models.BooleanField(default=False)
 
     class Meta:
