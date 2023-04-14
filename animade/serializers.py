@@ -16,8 +16,7 @@ class ChangePasswordSerializer(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'email'
-                  )
+        fields = ('id', 'username', 'email')
 
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
@@ -27,7 +26,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 class CreatedDesignSerializer(serializers.ModelSerializer):
     class Meta:
         model = CreatedDesign
-        fields = "__all__"
+        fields = '__all__'
 
 class SavedDesignSerializer(serializers.ModelSerializer):
     class Meta:

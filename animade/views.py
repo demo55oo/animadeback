@@ -109,9 +109,7 @@ class CreateProfileAPIView(APIView):
 
 class ProfileAPIView(APIView):
     """
-        View for read, update and delete specific profile
-        get: for anyone
-        put, delete : for profile owners
+        View to see profile info
     """
     permission_classes = [
         permissions.IsAuthenticated, OwnerPermission
@@ -121,6 +119,28 @@ class ProfileAPIView(APIView):
         profile = Profile.objects.get(user__id=kwargs['user_id'])
         profile_serializer = ProfileSerializer(profile)
         return Response(profile_serializer.data)
+
+class MyProfileAPIView(APIView):
+    """
+        View to see profile info
+    """
+    permission_classes = [
+        permissions.IsAuthenticated, OwnerPermission
+    ]
+
+    def get(self, request, *args, **kwargs):
+        profile = Profile.objects.get(user=request.user)
+        profile_serializer = ProfileSerializer(profile)
+        return Response(profile_serializer.data)
+
+class ProfileModifyAPIView(APIView):
+    """
+        View to update and delete profile
+    """
+
+    permission_classes = [
+        permissions.IsAuthenticated, OwnerPermission
+    ]
 
     def put(self, request, *args, **kwargs):
         profile = Profile.objects.get(user__id=kwargs['user_id'])
@@ -147,7 +167,8 @@ class CreatedDesignAPIView(APIView):
 
     def get(self, request, *args, **kwargs):
         profile = CreatedDesign.objects.all()
-        design_serializer = CreatedDesignSerializer(profile)
+        design_serializer = CreatedDesignSerializer(profile, many = True)
+        print(profile)
         return Response(design_serializer.data)
     
     def post(self, request, *args, **kwargs):
@@ -159,9 +180,31 @@ class CreatedDesignAPIView(APIView):
             return Response(status=status.HTTP_201_CREATED)
         return Response(status=status.HTTP_304_NOT_MODIFIED)
 
-class CreatedDesignRUDView(generics.RetrieveUpdateDestroyAPIView):
+class CreatedDesignRetrieveView(generics.RetrieveAPIView):
     """
-        Created Design Detail, Update and Delete View
+        Created Design Detail View
+    """
+    permission_classes = [
+        permissions.IsAuthenticated
+    ]
+    queryset = CreatedDesign.objects.all()
+    serializer_class = CreatedDesignSerializer
+
+
+class CreatedDesignUpdateView(generics.UpdateAPIView):
+    """
+        Created Design Update View
+    """
+    permission_classes = [
+        permissions.IsAuthenticated, permissions.IsAdminUser
+    ]
+    queryset = CreatedDesign.objects.all()
+    serializer_class = CreatedDesignSerializer
+
+
+class CreatedDesignDestroyView(generics.DestroyAPIView):
+    """
+        Created Design Delete View
     """
     permission_classes = [
         permissions.IsAuthenticated, permissions.IsAdminUser
@@ -206,7 +249,7 @@ class UserSavedDesignAPIView(APIView):
     ]
 
     def get(self, request, *args, **kwargs):
-        design = SavedDesign.objects.filter(user = request.user)
+        design = SavedDesign.objects.filter(user = request.user, many = True)
         design_serializer = SavedDesignSerializer(design)
         return Response(design_serializer.data)
 

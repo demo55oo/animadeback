@@ -27,7 +27,7 @@ from django.views.generic.base import TemplateView
 
 # Routers provide an easy way of automatically determining the URL conf.
 
-urlpatterns = [
+urlpatterns = [ 
     path('api/register/', RegisterAPI.as_view(), name='register'),
     path('api/login/', LoginAPI.as_view(), name='login'),
     path('api/logout/', knox_views.LogoutView.as_view(), name='logout'),
@@ -35,12 +35,23 @@ urlpatterns = [
     path('api/auth/user/', MainUser.as_view()),
     path('api/password_reset/', include('django_rest_passwordreset.urls', namespace='password_reset')),
     path('api/change-password/', ChangePasswordView.as_view(), name='change-password'),
-    path('api/profile/create/', CreateProfileAPIView.as_view()),
-    path('api/users/<user_id>/profile/', ProfileAPIView.as_view()),
-    path('api/createddesign/', CreatedDesignAPIView.as_view()),
-    path('api/createddesign/<int:pk>/', CreatedDesignRUDView.as_view()),
-    path('api/createddesign/<int:pk>/save/', SaveDesignAPIView.as_view()),
-    path('api/users/<user_id>/saveddesign/', UserSavedDesignAPIView.as_view()),
+    path('api/profile/self/', MyProfileAPIView.as_view(), name = 'myprofile'),
+    path('api/profile/create/', CreateProfileAPIView.as_view(), name = 'createprofile'),
+    path('api/user/<user_id>/profile/', ProfileAPIView.as_view(), name = 'profile'),
+    path('api/user/<user_id>/profile/modify/', ProfileModifyAPIView.as_view(), name = 'profilemodify'),
+    path('api/createddesign/', CreatedDesignAPIView.as_view(), name = 'createddesign'),
+    path('api/createddesign/<int:pk>/', CreatedDesignRetrieveView.as_view(), name = 'createddesign'),
+    path('api/createddesign/<int:pk>/update/', CreatedDesignUpdateView.as_view(), name = 'createddesignupdate'),
+    path('api/createddesign/<int:pk>/delete/', CreatedDesignDestroyView.as_view(), name = 'createddesigndelete'),
+    path('api/createddesign/<int:pk>/save/', SaveDesignAPIView.as_view(), name = 'savedesign'),
+    path('api/createddesign/<int:pk>/unsave/', UnsaveDesignAPIView.as_view(), name = 'unsavedesign'),
+    path('api/user/<user_id>/saveddesign/', UserSavedDesignAPIView.as_view(), name = 'saveddesign'),
     # path('api/saveddesign/<int:pk>/', SavedDesignRUDView.as_view()),
 
 ]
+# api/profile/create/
+# api/users/<user_id>/profile/
+# api/createddesign/
+# api/createddesign/<int:pk>/
+# api/createddesign/<int:pk>/save/
+# api/users/<user_id>/saveddesign/
