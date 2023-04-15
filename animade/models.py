@@ -41,7 +41,7 @@ class Profile(models.Model):
 class CreatedDesign(models.Model):
     desc = models.TextField()
     number = models.IntegerField()
-    image = models.ImageField(default=None, blank=True, null=True, upload_to="images/", max_length=1000)
+    image = models.ImageField(default=None, upload_to="designs/", max_length=1000)
 
     def __str__(self):
       return str(self.id)
@@ -55,4 +55,4 @@ class SavedDesign(models.Model):
         unique_together = ("user", "design",)
 
     def __str__(self):
-        return f"{self.user} - {self.task}"
+        return f"{self.user.first_name} - {self.status}"

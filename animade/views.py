@@ -12,6 +12,7 @@ from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, throttle_classes,permission_classes
+from rest_framework.parsers import MultiPartParser
 
 from knox.models import AuthToken
 from knox.views import LoginView as KnoxLoginView
@@ -22,6 +23,7 @@ from django.contrib.auth.models import User
 from .models import Profile, CreatedDesign, SavedDesign
 from .serializers import UserSerializer, RegisterSerializer, ChangePasswordSerializer,ProfileSerializer, CreatedDesignSerializer, SavedDesignSerializer
 from .permissions import OwnerPermission
+
 
 class ChangePasswordView(generics.UpdateAPIView):
     """
@@ -85,10 +87,9 @@ class MainUser(generics.RetrieveAPIView):
   permission_classes = [
       permissions.IsAuthenticated
   ]
-  serializer_class = UserSerializer()
+  serializer_class = UserSerializer
 
   def get_object(self):
-
     return self.request.user
 
 class CreateProfileAPIView(APIView):
@@ -112,7 +113,7 @@ class ProfileAPIView(APIView):
         View to see profile info
     """
     permission_classes = [
-        permissions.IsAuthenticated, OwnerPermission
+        permissions.IsAuthenticated
     ]
 
     def get(self, request, *args, **kwargs):
@@ -125,7 +126,7 @@ class MyProfileAPIView(APIView):
         View to see profile info
     """
     permission_classes = [
-        permissions.IsAuthenticated, OwnerPermission
+        permissions.IsAuthenticated
     ]
 
     def get(self, request, *args, **kwargs):
@@ -165,6 +166,8 @@ class CreatedDesignAPIView(APIView):
         permissions.IsAuthenticated, OwnerPermission
     ]
 
+    parser_classes = (MultiPartParser,)
+
     def get(self, request, *args, **kwargs):
         profile = CreatedDesign.objects.all()
         design_serializer = CreatedDesignSerializer(profile, many = True)
@@ -172,13 +175,16 @@ class CreatedDesignAPIView(APIView):
         return Response(design_serializer.data)
     
     def post(self, request, *args, **kwargs):
-        design_data = request.POST
+        design_data = request.POST.dict()
+        file_obj = request.FILES['image']
+        design_data['image'] = request.FILES['image']
+        print(design_data)
         serializer = CreatedDesignSerializer(data = design_data)
         # return Response(status=status.HTTP_201_CREATED)
         if serializer.is_valid():
             serializer.save()
-            return Response(status=status.HTTP_201_CREATED)
-        return Response(status=status.HTTP_304_NOT_MODIFIED)
+            return Response({"message":"Design Created Successfully"},status=status.HTTP_201_CREATED)
+        return Response({"message":"Could not Create Design"},status=status.HTTP_304_NOT_MODIFIED)
 
 class CreatedDesignRetrieveView(generics.RetrieveAPIView):
     """
@@ -216,25 +222,37 @@ class SaveDesignAPIView(APIView):
     """
         View to save design
     """
+    permission_classes = [
+        permissions.IsAuthenticated
+    ]
     def get(self, request, *args, **kwargs):
         user = request.user
         design = CreatedDesign.objects.get(id = kwargs['pk'])
         try:
             saveddesign = get_object_or_404(SavedDesign, design = design)
+            print(saveddesign)
+            print(type(saveddesign), saveddesign)
             saveddesign.status = True
             saveddesign.save()
             return Response({"message" :"Design saved successfully!"},status=status.HTTP_201_CREATED)
         
         except:
-            User.objects.create(user = user, design = design, status = True)
+            SavedDesign.objects.create(user = user, design = design, status = True)
             return Response({"message" :"Design saved successfully!"},status=status.HTTP_201_CREATED)
 
 class UnsaveDesignAPIView(APIView):
     """
         View to save design
     """
+    permission_classes = [
+        permissions.IsAuthenticated
+    ]
+
     def get(self, request, *args, **kwargs):
-        design = SavedDesign.objects.get(id = kwargs['pk'])
+        try:
+            design = SavedDesign.objects.get(design__id = kwargs['pk'],user = request.user)
+        except:
+            return Response({"message": "Design not found saved"}, status = 404)
         design.status = False
         design.save()
         # User.objects.create(user = user, design = design, status = True)
@@ -245,12 +263,12 @@ class UserSavedDesignAPIView(APIView):
         View to list saved designs of requesting user
     """
     permission_classes = [  
-        permissions.IsAuthenticated, OwnerPermission
+        permissions.IsAuthenticated
     ]
 
     def get(self, request, *args, **kwargs):
-        design = SavedDesign.objects.filter(user = request.user, many = True)
-        design_serializer = SavedDesignSerializer(design)
+        design = SavedDesign.objects.filter(user = request.user, status = True)
+        design_serializer = SavedDesignSerializer(design, many = True)
         return Response(design_serializer.data)
 
 # class SavedDesignRUDView(generics.RetrieveUpdateDestroyAPIView):

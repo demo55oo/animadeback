@@ -45,7 +45,7 @@ urlpatterns = [
     path('api/createddesign/<int:pk>/delete/', CreatedDesignDestroyView.as_view(), name = 'createddesigndelete'),
     path('api/createddesign/<int:pk>/save/', SaveDesignAPIView.as_view(), name = 'savedesign'),
     path('api/createddesign/<int:pk>/unsave/', UnsaveDesignAPIView.as_view(), name = 'unsavedesign'),
-    path('api/user/<user_id>/saveddesign/', UserSavedDesignAPIView.as_view(), name = 'saveddesign'),
+    path('api/user/saveddesign/', UserSavedDesignAPIView.as_view(), name = 'saveddesign'),
     # path('api/saveddesign/<int:pk>/', SavedDesignRUDView.as_view()),
 
 ]
