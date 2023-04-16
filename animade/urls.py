@@ -49,9 +49,3 @@ urlpatterns = [
     # path('api/saveddesign/<int:pk>/', SavedDesignRUDView.as_view()),
 
 ]
-# api/profile/create/
-# api/users/<user_id>/profile/
-# api/createddesign/
-# api/createddesign/<int:pk>/
-# api/createddesign/<int:pk>/save/
-# api/users/<user_id>/saveddesign/

@@ -19,9 +19,18 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('id', 'username', 'email')
 
 class ProfileSerializer(serializers.ModelSerializer):
+    username = serializers.SerializerMethodField(read_only = True)
+    email = serializers.SerializerMethodField(read_only = True)
+
     class Meta:
         model = Profile
         fields = "__all__"
+
+    def get_username(self, obj):
+        return obj.user.username
+    
+    def get_email(self, obj):
+        return obj.user.email
 
 class CreatedDesignSerializer(serializers.ModelSerializer):
     class Meta:
